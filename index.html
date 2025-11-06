@@ -25,6 +25,11 @@
                         <i class="fas fa-shopping-cart"></i> Cart
                         <span id="cart-count" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">0</span>
                     </a>
+                    <div id="auth-links" class="flex items-center space-x-2">
+                        <a href="login.html" class="text-gray-700 hover:text-blue-600 px-3 py-2 font-medium">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -126,6 +131,16 @@
         }
         
         updateCartCount();
+        
+        // Update auth links
+        (async () => {
+            try {
+                const { updateNavbar } = await import('./js/supabase.js');
+                await updateNavbar();
+            } catch (error) {
+                console.log('Supabase not configured yet');
+            }
+        })();
     </script>
 </body>
 </html>

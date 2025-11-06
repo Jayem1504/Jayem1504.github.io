@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seller Dashboard - Tumblera</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-gradient-to-r from-purple-600 to-blue-600 shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <i class="fas fa-chart-line text-white text-2xl mr-2"></i>
+                    <span class="font-bold text-xl text-white">Seller Dashboard</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span id="seller-name" class="text-white font-medium"></span>
+                    <button id="logout-btn" class="text-white hover:text-gray-200 px-3 py-2 font-medium">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">Total Orders</p>
+                        <p id="total-orders" class="text-3xl font-bold text-gray-800">0</p>
+                    </div>
+                    <div class="bg-blue-100 rounded-full p-3">
+                        <i class="fas fa-shopping-bag text-blue-600 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">Pending</p>
+                        <p id="pending-orders" class="text-3xl font-bold text-yellow-600">0</p>
+                    </div>
+                    <div class="bg-yellow-100 rounded-full p-3">
+                        <i class="fas fa-clock text-yellow-600 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">Processing</p>
+                        <p id="processing-orders" class="text-3xl font-bold text-blue-600">0</p>
+                    </div>
+                    <div class="bg-blue-100 rounded-full p-3">
+                        <i class="fas fa-cog fa-spin text-blue-600 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm">Completed</p>
+                        <p id="completed-orders" class="text-3xl font-bold text-green-600">0</p>
+                    </div>
+                    <div class="bg-green-100 rounded-full p-3">
+                        <i class="fas fa-check-circle text-green-600 text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters and Search -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <div class="flex flex-col md:flex-row gap-4">
+                <div class="flex-1">
+                    <input type="text" id="search-input" placeholder="Search by customer name, email, or order ID..."
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                </div>
+                <div>
+                    <select id="status-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="all">All Orders</option>
+                        <option value="pending">Pending</option>
+                        <option value="processing">Processing</option>
+                        <option value="shipped">Shipped</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div>
+                    <button id="refresh-btn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                        <i class="fas fa-sync-alt mr-2"></i>Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders Table -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="p-6 border-b border-gray-200">
+                <h2 class="text-2xl font-bold text-gray-800">Recent Orders</h2>
+            </div>
+            
+            <!-- Loading State -->
+            <div id="loading-state" class="p-12 text-center">
+                <i class="fas fa-spinner fa-spin text-blue-600 text-4xl mb-4"></i>
+                <p class="text-gray-500">Loading orders...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="p-12 text-center hidden">
+                <i class="fas fa-inbox text-gray-300 text-6xl mb-4"></i>
+                <p class="text-gray-500 text-lg">No orders found</p>
+            </div>
+
+            <!-- Orders List -->
+            <div id="orders-container" class="hidden">
+                <!-- Orders will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Detail Modal -->
+    <div id="order-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-screen overflow-y-auto">
+            <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="text-2xl font-bold text-gray-800">Order Details</h3>
+                <button id="close-modal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <div id="order-detail-content" class="p-6">
+                <!-- Order details will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { 
+            protectSellerPage, 
+            getCurrentUser, 
+            getAllOrders, 
+            updateOrderStatus,
+            signOut 
+        } from './js/supabase.js';
+
+        // Protect this page (seller only)
+        const hasAccess = await protectSellerPage();
+        if (!hasAccess) {
+            // Will redirect automatically
+            throw new Error('Access denied');
+        }
+
+        // Global state
+        let allOrders = [];
+        let filteredOrders = [];
+
+        // Load seller info
+        const user = await getCurrentUser();
+        if (user) {
+            const sellerNameElement = document.getElementById('seller-name');
+            sellerNameElement.textContent = user.email;
+        }
+
+        // Logout handler
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            if (confirm('Are you sure you want to logout?')) {
+                await signOut();
+                window.location.href = 'index.html';
+            }
+        });
+
+        // Load orders
+        async function loadOrders() {
+            const loadingState = document.getElementById('loading-state');
+            const emptyState = document.getElementById('empty-state');
+            const ordersContainer = document.getElementById('orders-container');
+            
+            loadingState.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+            ordersContainer.classList.add('hidden');
+            
+            const result = await getAllOrders();
+            
+            if (result.success) {
+                allOrders = result.orders;
+                filteredOrders = allOrders;
+                updateStats();
+                renderOrders();
+            } else {
+                console.error('Failed to load orders:', result.error);
+                loadingState.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+            }
+        }
+
+        // Update statistics
+        function updateStats() {
+            document.getElementById('total-orders').textContent = allOrders.length;
+            document.getElementById('pending-orders').textContent = 
+                allOrders.filter(o => o.status === 'pending').length;
+            document.getElementById('processing-orders').textContent = 
+                allOrders.filter(o => o.status === 'processing').length;
+            document.getElementById('completed-orders').textContent = 
+                allOrders.filter(o => o.status === 'delivered').length;
+        }
+
+        // Render orders
+        function renderOrders() {
+            const loadingState = document.getElementById('loading-state');
+            const emptyState = document.getElementById('empty-state');
+            const ordersContainer = document.getElementById('orders-container');
+            
+            loadingState.classList.add('hidden');
+            
+            if (filteredOrders.length === 0) {
+                emptyState.classList.remove('hidden');
+                ordersContainer.classList.add('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            ordersContainer.classList.remove('hidden');
+            
+            ordersContainer.innerHTML = filteredOrders.map(order => `
+                <div class="border-b border-gray-200 hover:bg-gray-50 transition">
+                    <div class="p-6">
+                        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-3 mb-2">
+                                    <span class="font-mono text-sm text-gray-500">#${order.id.substring(0, 8)}</span>
+                                    <span class="px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(order.status)}">
+                                        ${order.status.toUpperCase()}
+                                    </span>
+                                </div>
+                                <h3 class="text-lg font-semibold text-gray-800">${order.customer_name}</h3>
+                                <p class="text-sm text-gray-600">${order.customer_email}</p>
+                                <p class="text-sm text-gray-600">${order.customer_phone}</p>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    <i class="fas fa-calendar mr-1"></i>
+                                    ${new Date(order.created_at).toLocaleString()}
+                                </p>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="text-right">
+                                    <p class="text-sm text-gray-500">Total</p>
+                                    <p class="text-2xl font-bold text-blue-600">$${order.total.toFixed(2)}</p>
+                                    <p class="text-xs text-gray-500">${JSON.parse(order.items).length} item(s)</p>
+                                </div>
+                                <div class="flex flex-col gap-2">
+                                    <button onclick="viewOrderDetail('${order.id}')" 
+                                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm">
+                                        <i class="fas fa-eye mr-1"></i>View
+                                    </button>
+                                    <select onchange="updateStatus('${order.id}', this.value)" 
+                                            class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                                        <option value="">Change Status</option>
+                                        <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
+                                        <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>Processing</option>
+                                        <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Shipped</option>
+                                        <option value="delivered" ${order.status === 'delivered' ? 'selected' : ''}>Delivered</option>
+                                        <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Get status color
+        function getStatusColor(status) {
+            const colors = {
+                pending: 'bg-yellow-100 text-yellow-800',
+                processing: 'bg-blue-100 text-blue-800',
+                shipped: 'bg-purple-100 text-purple-800',
+                delivered: 'bg-green-100 text-green-800',
+                cancelled: 'bg-red-100 text-red-800'
+            };
+            return colors[status] || 'bg-gray-100 text-gray-800';
+        }
+
+        // View order detail
+        window.viewOrderDetail = function(orderId) {
+            const order = allOrders.find(o => o.id === orderId);
+            if (!order) return;
+            
+            const items = JSON.parse(order.items);
+            
+            const content = `
+                <div class="space-y-6">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Order ID</p>
+                            <p class="font-mono text-sm">${order.id}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Status</p>
+                            <span class="px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(order.status)}">
+                                ${order.status.toUpperCase()}
+                            </span>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Order Date</p>
+                            <p>${new Date(order.created_at).toLocaleString()}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Payment Method</p>
+                            <p>Cash on Delivery</p>
+                        </div>
+                    </div>
+                    
+                    <div class="border-t pt-4">
+                        <h4 class="font-semibold mb-2">Customer Information</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Name</p>
+                                <p>${order.customer_name}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Email</p>
+                                <p>${order.customer_email}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Phone</p>
+                                <p>${order.customer_phone}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-500">Address</p>
+                                <p>${order.customer_address}</p>
+                            </div>
+                        </div>
+                        ${order.customer_notes ? `
+                            <div class="mt-4">
+                                <p class="text-sm font-medium text-gray-500">Notes</p>
+                                <p>${order.customer_notes}</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="border-t pt-4">
+                        <h4 class="font-semibold mb-4">Order Items</h4>
+                        <div class="space-y-4">
+                            ${items.map((item, index) => `
+                                <div class="flex gap-4 p-4 border rounded-lg">
+                                    <div class="flex-shrink-0">
+                                        <div class="w-24 h-32 bg-gray-100 rounded flex items-center justify-center relative" style="background-color: ${item.design.tumblerColor}">
+                                            ${item.design.imageData ? `
+                                                <img src="${item.design.imageData}" class="w-16 h-16 object-contain" />
+                                            ` : ''}
+                                            <div class="absolute text-center" style="font-family: ${item.design.font}; color: ${item.design.textColor}; font-size: 10px;">
+                                                ${item.design.text || ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1">
+                                        <h5 class="font-semibold">Custom Tumbler #${index + 1}</h5>
+                                        <div class="text-sm text-gray-600 mt-2 space-y-1">
+                                            ${item.design.text ? `<p><strong>Text:</strong> "${item.design.text}"</p>` : ''}
+                                            <p><strong>Font:</strong> ${item.design.font} (${item.design.fontSize}px)</p>
+                                            <p><strong>Colors:</strong> Text: ${item.design.textColor}, Tumbler: ${item.design.tumblerColor}</p>
+                                        </div>
+                                        <p class="text-lg font-bold text-blue-600 mt-2">$${item.price.toFixed(2)}</p>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="border-t pt-4">
+                        <div class="space-y-2">
+                            <div class="flex justify-between">
+                                <span>Subtotal:</span>
+                                <span>$${order.subtotal.toFixed(2)}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Shipping:</span>
+                                <span>$${order.shipping.toFixed(2)}</span>
+                            </div>
+                            <div class="flex justify-between text-lg font-bold border-t pt-2">
+                                <span>Total:</span>
+                                <span class="text-blue-600">$${order.total.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('order-detail-content').innerHTML = content;
+            document.getElementById('order-modal').classList.remove('hidden');
+            document.getElementById('order-modal').classList.add('flex');
+        };
+
+        // Close modal
+        document.getElementById('close-modal').addEventListener('click', () => {
+            document.getElementById('order-modal').classList.add('hidden');
+            document.getElementById('order-modal').classList.remove('flex');
+        });
+
+        // Update status
+        window.updateStatus = async function(orderId, newStatus) {
+            if (!newStatus) return;
+            
+            const result = await updateOrderStatus(orderId, newStatus);
+            if (result.success) {
+                // Update local data
+                const orderIndex = allOrders.findIndex(o => o.id === orderId);
+                if (orderIndex !== -1) {
+                    allOrders[orderIndex].status = newStatus;
+                    updateStats();
+                    filterOrders();
+                }
+            } else {
+                alert('Failed to update status: ' + result.error);
+            }
+        };
+
+        // Filter orders
+        function filterOrders() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const statusFilter = document.getElementById('status-filter').value;
+            
+            filteredOrders = allOrders.filter(order => {
+                const matchesSearch = !searchTerm || 
+                    order.customer_name.toLowerCase().includes(searchTerm) ||
+                    order.customer_email.toLowerCase().includes(searchTerm) ||
+                    order.id.toLowerCase().includes(searchTerm);
+                
+                const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
+                
+                return matchesSearch && matchesStatus;
+            });
+            
+            renderOrders();
+        }
+
+        // Event listeners
+        document.getElementById('search-input').addEventListener('input', filterOrders);
+        document.getElementById('status-filter').addEventListener('change', filterOrders);
+        document.getElementById('refresh-btn').addEventListener('click', loadOrders);
+
+        // Initial load
+        loadOrders();
+    </script>
+</body>
+</html>
