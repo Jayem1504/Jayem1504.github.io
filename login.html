@@ -223,6 +223,24 @@
                 loginBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Sign In';
             }
         });
+
+        // Check if already logged in (seller check)
+        if (localStorage.getItem('isSellerLoggedIn') === 'true') {
+            window.location.href = 'seller.html';
+        }
+        
+        // Check if already logged in (customer check)
+        import { getCurrentUser } from './js/supabase.js';
+        
+        (async () => {
+            const user = await getCurrentUser();
+            if (user) {
+                // Customer is already logged in, redirect to home
+                const urlParams = new URLSearchParams(window.location.search);
+                const redirect = urlParams.get('redirect') || 'index.html';
+                window.location.href = redirect;
+            }
+        })();
     </script>
 </body>
 </html>
