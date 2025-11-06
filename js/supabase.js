@@ -415,3 +415,74 @@ export async function updateNavbar() {
         }
     }
 }
+
+// ============================================
+// PROFILE MANAGEMENT FUNCTIONS
+// ============================================
+
+// Save user profile to Supabase
+export async function saveUserProfile(profileData) {
+    try {
+        const user = await getCurrentUser();
+        if (!user) {
+            return { success: false, error: 'User not authenticated' };
+        }
+
+        // Upsert profile data (insert or update)
+        const { data, error } = await supabase
+            .from('user_profiles')
+            .upsert({
+                user_id: user.id,
+                email: user.email,
+                name: profileData.name || null,
+                phone: profileData.phone || null,
+                address: profileData.address || null,
+                updated_at: new Date().toISOString()
+            }, {
+                onConflict: 'user_id'
+            })
+            .select();
+
+        if (error) throw error;
+        return { success: true, data };
+    } catch (error) {
+        console.error('Save profile error:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+// Load user profile from Supabase
+export async function loadUserProfile() {
+    try {
+        const user = await getCurrentUser();
+        if (!user) {
+            return { success: false, error: 'User not authenticated' };
+        }
+
+        const { data, error } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('user_id', user.id)
+            .single();
+
+        if (error) {
+            // If profile doesn't exist, return empty profile
+            if (error.code === 'PGRST116') {
+                return { 
+                    success: true, 
+                    data: { 
+                        name: '', 
+                        phone: '', 
+                        address: '' 
+                    } 
+                };
+            }
+            throw error;
+        }
+
+        return { success: true, data };
+    } catch (error) {
+        console.error('Load profile error:', error);
+        return { success: false, error: error.message };
+    }
+}
