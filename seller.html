@@ -17,6 +17,7 @@
                     <span class="font-bold text-xl text-white">Seller Dashboard</span>
                 </div>
                 <div class="flex items-center space-x-4">
+                    <span id="seller-name" class="text-white font-medium"></span>
                     <button id="logout-btn" class="text-white hover:text-gray-200 px-3 py-2 font-medium">
                         <i class="fas fa-sign-out-alt"></i> Logout
                     </button>
@@ -162,6 +163,14 @@
         let allOrders = [];
         let filteredOrders = [];
 
+        // Load seller info
+        const sellerEmail = localStorage.getItem('sellerEmail');
+        if (sellerEmail) {
+            const sellerNameElement = document.getElementById('seller-name');
+            sellerNameElement.textContent = sellerEmail;
+            sellerNameElement.textContent = sellerEmail;
+        }
+
         // Logout handler
         document.getElementById('logout-btn').addEventListener('click', () => {
             if (confirm('Are you sure you want to logout?')) {
@@ -267,6 +276,7 @@
                                     </button>
                                     <select onchange="updateStatus('${order.id}', this.value)" 
                                             class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                                        <option value="">Change Status</option>
                                         <option value="pending" ${order.status === 'pending' ? 'selected' : ''}>Pending</option>
                                         <option value="processing" ${order.status === 'processing' ? 'selected' : ''}>Processing</option>
                                         <option value="shipped" ${order.status === 'shipped' ? 'selected' : ''}>Shipped</option>

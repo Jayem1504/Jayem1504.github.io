@@ -129,7 +129,7 @@
     </footer>
 
     <script type="module">
-        import { getCurrentUser, updateNavbar, updateCartCount, getUserProfile, saveUserProfile } from './js/supabase.js';
+        import { getCurrentUser, updateNavbar, updateCartCount } from './js/supabase.js';
 
         // Update cart count and navbar
         updateCartCount();
@@ -154,47 +154,33 @@
             // Set email
             profileEmail.value = user.email;
 
-            // Load saved profile data from database
-            const profileResult = await getUserProfile();
+            // Load saved profile data from localStorage
+            const savedProfile = JSON.parse(localStorage.getItem(`profile_${user.email}`) || '{}');
             
-            if (profileResult.success && profileResult.data) {
-                profileName.value = profileResult.data.name || '';
-                profilePhone.value = profileResult.data.phone || '';
-                profileAddress.value = profileResult.data.address || '';
-            }
+            profileName.value = savedProfile.name || '';
+            profilePhone.value = savedProfile.phone || '';
+            profileAddress.value = savedProfile.address || '';
 
             // Handle form submission
             const profileForm = document.getElementById('profile-form');
             const saveBtn = document.getElementById('save-btn');
             const saveStatus = document.getElementById('save-status');
 
-            profileForm.addEventListener('submit', async (e) => {
+            profileForm.addEventListener('submit', (e) => {
                 e.preventDefault();
 
-                // Disable button and show loading
-                saveBtn.disabled = true;
-                saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
-
-                // Save profile data to database
+                // Save profile data
                 const profileData = {
+                    email: user.email,
                     name: profileName.value.trim(),
                     phone: profilePhone.value.trim(),
                     address: profileAddress.value.trim()
                 };
 
-                const result = await saveUserProfile(profileData);
+                localStorage.setItem(`profile_${user.email}`, JSON.stringify(profileData));
 
-                if (result.success) {
-                    // Show success message
-                    saveStatus.innerHTML = '<span class="text-green-600"><i class="fas fa-check-circle mr-1"></i>Profile saved successfully!</span>';
-                } else {
-                    // Show error message
-                    saveStatus.innerHTML = '<span class="text-red-600"><i class="fas fa-exclamation-circle mr-1"></i>Failed to save profile</span>';
-                }
-
-                // Re-enable button
-                saveBtn.disabled = false;
-                saveBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Save Changes';
+                // Show success message
+                saveStatus.innerHTML = '<span class="text-green-600"><i class="fas fa-check-circle mr-1"></i>Profile saved successfully!</span>';
                 
                 setTimeout(() => {
                     saveStatus.innerHTML = '';
