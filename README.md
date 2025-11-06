@@ -66,15 +66,19 @@ To receive order notifications via email:
 
 ### 3. Deploy to GitHub Pages
 
-#### Option A: Using GitHub Web Interface
-1. Push your code to a GitHub repository
-2. Go to repository Settings
-3. Navigate to Pages section
-4. Under "Source", select the main branch
-5. Click Save
-6. Your site will be available at `https://yourusername.github.io/Tumblera/`
+**Important:** This is a static HTML site, so you don't need GitHub Actions!
 
-#### Option B: Using Command Line
+#### Option A: Using GitHub Desktop (Recommended for Beginners)
+1. Open GitHub Desktop
+2. Create a new repository or add existing
+3. Commit all files with message: "Initial commit: Tumblera website"
+4. Publish to GitHub
+5. On GitHub.com, go to: Settings → Pages
+6. Under "Source", select branch: `main`, folder: `/ (root)`
+7. Click Save
+8. Wait 2 minutes - your site will be at: `https://yourusername.github.io/Tumblera/`
+
+#### Option B: Using Command Line (If Git is Installed)
 ```bash
 git init
 git add .
@@ -84,7 +88,19 @@ git remote add origin https://github.com/yourusername/Tumblera.git
 git push -u origin main
 ```
 
-Then enable GitHub Pages in repository settings.
+Then on GitHub.com:
+1. Go to repository Settings → Pages
+2. Source: `main` branch, folder: `/ (root)`
+3. Click Save
+
+#### Option C: Using GitHub Web Interface
+1. Create a new repository on GitHub.com
+2. Upload all files using "Add file" → "Upload files"
+3. Go to Settings → Pages
+4. Source: `main` branch, folder: `/ (root)`
+5. Click Save
+
+**Note:** GitHub Actions workflow has been removed because it's not needed for static sites!
 
 ### 4. Test Locally (Optional)
 You can test the website locally by:
