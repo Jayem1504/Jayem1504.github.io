@@ -56,9 +56,21 @@
             <div class="bg-gray-50 rounded-lg p-6 mb-8 text-left">
                 <h2 class="text-xl font-semibold mb-4 text-center">Order Summary</h2>
                 <div class="space-y-2">
-                    <div class="flex justify-between">
-                        <span class="text-gray-600">Order Number:</span>
-                        <span id="order-number" class="font-semibold text-blue-600">Loading...</span>
+                    <div class="flex flex-col gap-1">
+                        <span class="text-gray-600 text-sm">Order ID:</span>
+                        <div class="flex items-center gap-2 bg-white p-2 rounded border">
+                            <span id="order-number" class="font-mono text-xs text-blue-600 break-all flex-1">Loading...</span>
+                            <button 
+                                onclick="copyOrderId()" 
+                                id="copy-btn"
+                                class="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition shrink-0"
+                                title="Copy Order ID">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                        <span class="text-xs text-gray-500">
+                            <i class="fas fa-info-circle mr-1"></i>Save this ID to track your order
+                        </span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-gray-600">Order Date:</span>
@@ -134,19 +146,34 @@
     </footer>
 
     <script>
-        // Generate order number
-        function generateOrderNumber() {
-            const date = new Date();
-            const random = Math.floor(Math.random() * 10000);
-            return `TUM-${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}-${String(random).padStart(4, '0')}`;
+        // Copy order ID to clipboard
+        function copyOrderId() {
+            const orderNumber = document.getElementById('order-number').textContent;
+            const copyBtn = document.getElementById('copy-btn');
+            
+            navigator.clipboard.writeText(orderNumber).then(() => {
+                // Show success feedback
+                const originalHTML = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<i class="fas fa-check"></i>';
+                copyBtn.classList.add('bg-green-600');
+                copyBtn.classList.remove('bg-blue-600');
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalHTML;
+                    copyBtn.classList.remove('bg-green-600');
+                    copyBtn.classList.add('bg-blue-600');
+                }, 2000);
+            }).catch(err => {
+                alert('Failed to copy order ID');
+            });
         }
-
+        
         // Load order details from session storage
         window.addEventListener('DOMContentLoaded', function() {
             const orderData = JSON.parse(sessionStorage.getItem('lastOrder') || '{}');
             
-            // Display order number
-            document.getElementById('order-number').textContent = generateOrderNumber();
+            // Display order ID (UUID from database)
+            document.getElementById('order-number').textContent = orderData.orderId || 'N/A';
             
             // Display order date
             const orderDate = new Date();

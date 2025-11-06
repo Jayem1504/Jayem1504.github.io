@@ -85,14 +85,14 @@
 
             <!-- Track by Order ID -->
             <div id="order-section" class="hidden">
-                <h2 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Track by Order Number</h2>
-                <p class="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">Enter your order number to check its status</p>
+                <h2 class="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Track by Order ID</h2>
+                <p class="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">Enter your order ID to check its status</p>
                 
                 <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
                     <input 
                         type="text" 
                         id="order-input" 
-                        placeholder="e.g., A1B2C3D4"
+                        placeholder="Paste your order ID here"
                         class="flex-1 px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                     />
                     <button 
@@ -103,7 +103,7 @@
                 </div>
                 <p class="text-xs sm:text-sm text-gray-500 mt-2">
                     <i class="fas fa-info-circle mr-1"></i>
-                    Order number is in your confirmation email (8 characters)
+                    Order ID can be found in your order confirmation page and email
                 </p>
             </div>
         </div>
@@ -233,15 +233,10 @@
 
         // Search order by order ID
         window.searchByOrderId = async function() {
-            const orderId = document.getElementById('order-input').value.trim().toUpperCase();
+            const orderId = document.getElementById('order-input').value.trim();
             
             if (!orderId) {
-                alert('Please enter your order number');
-                return;
-            }
-
-            if (orderId.length < 8) {
-                alert('Order number should be at least 8 characters');
+                alert('Please enter your order ID');
                 return;
             }
 
@@ -266,9 +261,9 @@
                     console.log('Searching orders by email:', searchValue);
                     query = query.eq('customer_email', searchValue);
                 } else if (searchType === 'id') {
-                    console.log('Searching order by ID:', searchValue);
-                    // Search by partial ID match (first 8 characters)
-                    query = query.or(`id.ilike.${searchValue}%,id.ilike.%${searchValue}%`);
+                    console.log('Searching order by UUID:', searchValue);
+                    // Search by exact UUID match
+                    query = query.eq('id', searchValue);
                 }
 
                 const { data, error } = await query.order('created_at', { ascending: false });
@@ -313,11 +308,11 @@
                         <!-- Order Header -->
                         <div class="bg-gradient-to-r from-purple-600 to-blue-600 p-3 sm:p-4">
                             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
-                                <div>
+                                <div class="flex-1 min-w-0">
                                     <p class="text-white text-xs sm:text-sm opacity-90">Order ID</p>
-                                    <p class="text-white font-mono font-semibold text-sm sm:text-base">#${order.id.substring(0, 8).toUpperCase()}</p>
+                                    <p class="text-white font-mono font-semibold text-xs sm:text-sm break-all">${order.id}</p>
                                 </div>
-                                <div class="text-left sm:text-right">
+                                <div class="text-left sm:text-right shrink-0">
                                     <span class="inline-flex items-center px-3 sm:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-semibold ${statusColor}">
                                         <i class="${statusIcon} mr-1 sm:mr-2"></i>
                                         ${order.status.toUpperCase()}
