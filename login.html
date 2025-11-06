@@ -193,10 +193,19 @@
                 const result = await signIn(email, password);
                 
                 if (result.success) {
-                    // Success! Redirect to home or previous page
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const redirect = urlParams.get('redirect') || 'index.html';
-                    window.location.href = redirect;
+                    // Check user role and redirect accordingly
+                    const { isSeller: checkIsSeller } = await import('./js/supabase.js');
+                    const isSellerUser = await checkIsSeller(result.user.id);
+                    
+                    if (isSellerUser) {
+                        // Redirect seller to dashboard
+                        window.location.href = 'seller.html';
+                    } else {
+                        // Redirect customer to previous page or home
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const redirect = urlParams.get('redirect') || 'index.html';
+                        window.location.href = redirect;
+                    }
                 } else {
                     // Show error
                     errorText.textContent = result.error || 'Invalid email or password';
@@ -218,15 +227,23 @@
         });
 
         // Check if already logged in
-        import { getCurrentUser } from './js/supabase.js';
+        import { getCurrentUser, isSeller as checkIsSeller } from './js/supabase.js';
         
         (async () => {
             const user = await getCurrentUser();
             if (user) {
-                // Already logged in, redirect
-                const urlParams = new URLSearchParams(window.location.search);
-                const redirect = urlParams.get('redirect') || 'index.html';
-                window.location.href = redirect;
+                // Check if user is a seller
+                const isSellerUser = await checkIsSeller(user.id);
+                
+                if (isSellerUser) {
+                    // Redirect seller to dashboard
+                    window.location.href = 'seller.html';
+                } else {
+                    // Redirect customer to home or previous page
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const redirect = urlParams.get('redirect') || 'index.html';
+                    window.location.href = redirect;
+                }
             }
         })();
     </script>

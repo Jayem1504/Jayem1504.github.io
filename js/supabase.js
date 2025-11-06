@@ -313,17 +313,17 @@ export async function protectPage(redirectTo = '/login.html') {
 }
 
 // Protect seller page
-export async function protectSellerPage(redirectTo = '/login.html') {
+export async function protectSellerPage(redirectTo = 'login.html') {
     const user = await getCurrentUser();
     if (!user) {
-        window.location.href = redirectTo;
+        window.location.href = redirectTo + '?redirect=seller.html';
         return false;
     }
     
     const isSellerUser = await isSeller(user.id);
     if (!isSellerUser) {
         alert('Access denied. Seller privileges required.');
-        window.location.href = '/index.html';
+        window.location.href = 'index.html';
         return false;
     }
     
