@@ -189,23 +189,24 @@
             loginBtn.disabled = true;
             loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Signing In...';
             
+            // Check if it's the seller account (hardcoded check)
+            if (email === 'tumblera.seller@gmail.com' && password === 'tumblera') {
+                // Seller login - store seller session and redirect
+                localStorage.setItem('isSellerLoggedIn', 'true');
+                localStorage.setItem('sellerEmail', email);
+                window.location.href = 'seller.html';
+                return;
+            }
+            
+            // For regular customers, use Supabase authentication
             try {
                 const result = await signIn(email, password);
                 
                 if (result.success) {
-                    // Check user role and redirect accordingly
-                    const { isSeller: checkIsSeller } = await import('./js/supabase.js');
-                    const isSellerUser = await checkIsSeller(result.user.id);
-                    
-                    if (isSellerUser) {
-                        // Redirect seller to dashboard
-                        window.location.href = 'seller.html';
-                    } else {
-                        // Redirect customer to previous page or home
-                        const urlParams = new URLSearchParams(window.location.search);
-                        const redirect = urlParams.get('redirect') || 'index.html';
-                        window.location.href = redirect;
-                    }
+                    // Customer login successful - redirect to home
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const redirect = urlParams.get('redirect') || 'index.html';
+                    window.location.href = redirect;
                 } else {
                     // Show error
                     errorText.textContent = result.error || 'Invalid email or password';
@@ -226,24 +227,21 @@
             }
         });
 
-        // Check if already logged in
-        import { getCurrentUser, isSeller as checkIsSeller } from './js/supabase.js';
+        // Check if already logged in (seller check)
+        if (localStorage.getItem('isSellerLoggedIn') === 'true') {
+            window.location.href = 'seller.html';
+        }
+        
+        // Check if already logged in (customer check)
+        import { getCurrentUser } from './js/supabase.js';
         
         (async () => {
             const user = await getCurrentUser();
             if (user) {
-                // Check if user is a seller
-                const isSellerUser = await checkIsSeller(user.id);
-                
-                if (isSellerUser) {
-                    // Redirect seller to dashboard
-                    window.location.href = 'seller.html';
-                } else {
-                    // Redirect customer to home or previous page
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const redirect = urlParams.get('redirect') || 'index.html';
-                    window.location.href = redirect;
-                }
+                // Customer is already logged in, redirect to home
+                const urlParams = new URLSearchParams(window.location.search);
+                const redirect = urlParams.get('redirect') || 'index.html';
+                window.location.href = redirect;
             }
         })();
     </script>

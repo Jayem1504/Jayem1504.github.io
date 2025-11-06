@@ -145,36 +145,34 @@
     </div>
 
     <script type="module">
-        import { 
-            protectSellerPage, 
-            getCurrentUser, 
-            getAllOrders, 
-            updateOrderStatus,
-            signOut 
-        } from './js/supabase.js';
-
-        // Protect this page (seller only)
-        const hasAccess = await protectSellerPage();
-        if (!hasAccess) {
-            // Will redirect automatically
-            throw new Error('Access denied');
+        // Simple seller authentication check (no Supabase needed)
+        if (localStorage.getItem('isSellerLoggedIn') !== 'true') {
+            alert('Please login with seller credentials to access this page.');
+            window.location.href = 'login.html?redirect=seller.html';
         }
+
+        import { 
+            getAllOrders, 
+            updateOrderStatus
+        } from './js/supabase.js';
 
         // Global state
         let allOrders = [];
         let filteredOrders = [];
 
         // Load seller info
-        const user = await getCurrentUser();
-        if (user) {
+        const sellerEmail = localStorage.getItem('sellerEmail');
+        if (sellerEmail) {
             const sellerNameElement = document.getElementById('seller-name');
-            sellerNameElement.textContent = user.email;
+            sellerNameElement.textContent = sellerEmail;
+            sellerNameElement.textContent = sellerEmail;
         }
 
         // Logout handler
-        document.getElementById('logout-btn').addEventListener('click', async () => {
+        document.getElementById('logout-btn').addEventListener('click', () => {
             if (confirm('Are you sure you want to logout?')) {
-                await signOut();
+                localStorage.removeItem('isSellerLoggedIn');
+                localStorage.removeItem('sellerEmail');
                 window.location.href = 'index.html';
             }
         });
