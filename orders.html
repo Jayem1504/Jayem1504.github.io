@@ -25,6 +25,9 @@
                     <a href="customize.html" class="text-white hover:text-gray-200 px-3 py-2 font-medium">
                         <i class="fas fa-paint-brush"></i> Customize
                     </a>
+                    <a href="orders.html" class="text-white hover:text-gray-200 px-3 py-2 font-medium border-b-2 border-white">
+                        <i class="fas fa-box"></i> Track Orders
+                    </a>
                     <a href="cart.html" class="text-white hover:text-gray-200 px-3 py-2 font-medium relative">
                         <i class="fas fa-shopping-cart"></i> Cart
                         <span id="cart-count" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">0</span>
@@ -38,27 +41,65 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Header -->
         <div class="mb-8">
-            <h1 class="text-4xl font-bold text-gray-900 mb-2">My Orders</h1>
+            <h1 class="text-4xl font-bold text-gray-900 mb-2">Track Orders</h1>
             <p class="text-gray-600">Track your custom tumbler orders</p>
         </div>
 
-        <!-- Search by Email -->
+        <!-- Search Options -->
         <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h2 class="text-xl font-semibold mb-4">Track Your Orders</h2>
-            <p class="text-gray-600 mb-4">Enter your email address to view all your orders</p>
-            
-            <div class="flex gap-4">
-                <input 
-                    type="email" 
-                    id="email-input" 
-                    placeholder="Enter your email address"
-                    class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                <button 
-                    onclick="searchOrders()" 
-                    class="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition">
-                    <i class="fas fa-search mr-2"></i>Search Orders
-                </button>
+            <div class="flex justify-center mb-6">
+                <div class="inline-flex rounded-lg border border-gray-300 p-1">
+                    <button id="tab-email" onclick="switchTab('email')" class="px-6 py-2 rounded-lg font-medium transition bg-blue-600 text-white">
+                        <i class="fas fa-envelope mr-2"></i>Track by Email
+                    </button>
+                    <button id="tab-order" onclick="switchTab('order')" class="px-6 py-2 rounded-lg font-medium transition text-gray-600 hover:bg-gray-100">
+                        <i class="fas fa-hashtag mr-2"></i>Track by Order ID
+                    </button>
+                </div>
+            </div>
+
+            <!-- Track by Email -->
+            <div id="email-section">
+                <h2 class="text-xl font-semibold mb-4">Track by Email Address</h2>
+                <p class="text-gray-600 mb-4">Enter your email to view all your orders</p>
+                
+                <div class="flex gap-4">
+                    <input 
+                        type="email" 
+                        id="email-input" 
+                        placeholder="Enter your email address"
+                        class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <button 
+                        onclick="searchByEmail()" 
+                        class="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition">
+                        <i class="fas fa-search mr-2"></i>Search Orders
+                    </button>
+                </div>
+            </div>
+
+            <!-- Track by Order ID -->
+            <div id="order-section" class="hidden">
+                <h2 class="text-xl font-semibold mb-4">Track by Order Number</h2>
+                <p class="text-gray-600 mb-4">Enter your order number to check its status</p>
+                
+                <div class="flex gap-4">
+                    <input 
+                        type="text" 
+                        id="order-input" 
+                        placeholder="Enter your order number (e.g., A1B2C3D4)"
+                        class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <button 
+                        onclick="searchByOrderId()" 
+                        class="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition">
+                        <i class="fas fa-search mr-2"></i>Track Order
+                    </button>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Order number is in your confirmation email (8 characters)
+                </p>
             </div>
         </div>
 
@@ -93,21 +134,55 @@
     </footer>
 
     <script type="module">
-        import { supabase, updateCartCount } from './js/supabase.js';
+        import { supabase, updateCartCount, getCurrentUser } from './js/supabase.js';
 
         // Update cart count on load
         updateCartCount();
 
-        // Store email in localStorage for convenience
-        const savedEmail = localStorage.getItem('customerEmail');
-        if (savedEmail) {
-            document.getElementById('email-input').value = savedEmail;
-            // Auto-search if email is saved
-            searchOrders();
-        }
+        // Check if user is logged in
+        (async () => {
+            const user = await getCurrentUser();
+            if (user) {
+                // User is logged in - auto-load their orders by email
+                console.log('User logged in:', user.email);
+                document.getElementById('email-input').value = user.email;
+                // Auto-search their orders
+                await searchByEmail();
+            } else {
+                // Not logged in - check for saved email
+                const savedEmail = localStorage.getItem('customerEmail');
+                if (savedEmail) {
+                    document.getElementById('email-input').value = savedEmail;
+                }
+            }
+        })();
+
+        // Switch between tabs
+        window.switchTab = function(tab) {
+            const emailSection = document.getElementById('email-section');
+            const orderSection = document.getElementById('order-section');
+            const emailTab = document.getElementById('tab-email');
+            const orderTab = document.getElementById('tab-order');
+
+            if (tab === 'email') {
+                emailSection.classList.remove('hidden');
+                orderSection.classList.add('hidden');
+                emailTab.classList.add('bg-blue-600', 'text-white');
+                emailTab.classList.remove('text-gray-600', 'hover:bg-gray-100');
+                orderTab.classList.remove('bg-blue-600', 'text-white');
+                orderTab.classList.add('text-gray-600', 'hover:bg-gray-100');
+            } else {
+                emailSection.classList.add('hidden');
+                orderSection.classList.remove('hidden');
+                orderTab.classList.add('bg-blue-600', 'text-white');
+                orderTab.classList.remove('text-gray-600', 'hover:bg-gray-100');
+                emailTab.classList.remove('bg-blue-600', 'text-white');
+                emailTab.classList.add('text-gray-600', 'hover:bg-gray-100');
+            }
+        };
 
         // Search orders by email
-        window.searchOrders = async function() {
+        window.searchByEmail = async function() {
             const email = document.getElementById('email-input').value.trim();
             
             if (!email) {
@@ -125,6 +200,28 @@
             // Save email for convenience
             localStorage.setItem('customerEmail', email);
 
+            await searchOrders('email', email);
+        };
+
+        // Search order by order ID
+        window.searchByOrderId = async function() {
+            const orderId = document.getElementById('order-input').value.trim().toUpperCase();
+            
+            if (!orderId) {
+                alert('Please enter your order number');
+                return;
+            }
+
+            if (orderId.length < 8) {
+                alert('Order number should be at least 8 characters');
+                return;
+            }
+
+            await searchOrders('id', orderId);
+        };
+
+        // Generic search function
+        async function searchOrders(searchType, searchValue) {
             const loadingState = document.getElementById('loading-state');
             const emptyState = document.getElementById('empty-state');
             const ordersContainer = document.getElementById('orders-container');
@@ -135,14 +232,18 @@
             ordersContainer.classList.add('hidden');
 
             try {
-                console.log('Searching orders for email:', email);
+                let query = supabase.from('orders').select('*');
 
-                // Query orders by email
-                const { data, error } = await supabase
-                    .from('orders')
-                    .select('*')
-                    .eq('customer_email', email)
-                    .order('created_at', { ascending: false });
+                if (searchType === 'email') {
+                    console.log('Searching orders by email:', searchValue);
+                    query = query.eq('customer_email', searchValue);
+                } else if (searchType === 'id') {
+                    console.log('Searching order by ID:', searchValue);
+                    // Search by partial ID match (first 8 characters)
+                    query = query.or(`id.ilike.${searchValue}%,id.ilike.%${searchValue}%`);
+                }
+
+                const { data, error } = await query.order('created_at', { ascending: false });
 
                 loadingState.classList.add('hidden');
 
@@ -168,7 +269,7 @@
                 loadingState.classList.add('hidden');
                 alert('An error occurred. Please try again.');
             }
-        };
+        }
 
         // Display orders
         function displayOrders(orders) {
@@ -384,7 +485,13 @@
         // Allow Enter key to search
         document.getElementById('email-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                searchOrders();
+                searchByEmail();
+            }
+        });
+
+        document.getElementById('order-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchByOrderId();
             }
         });
     </script>
