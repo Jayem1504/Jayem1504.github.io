@@ -401,20 +401,14 @@ export async function updateNavbar() {
                 }
             });
             
-            // Update "Track Orders" to "My Orders" for logged-in users
+            // Update "Track Orders" link text to "My Orders" for logged-in users
             const ordersLinks = document.querySelectorAll('a[href="orders.html"]');
             ordersLinks.forEach(link => {
-                const textNode = Array.from(link.childNodes).find(node => node.nodeType === 3);
-                if (textNode) {
-                    textNode.textContent = textNode.textContent.replace('Track', 'My Orders');
+                // Update the full text content, preserving the icon
+                const innerHTML = link.innerHTML;
+                if (innerHTML.includes('Track')) {
+                    link.innerHTML = innerHTML.replace(/Track Orders?/g, 'My Orders').replace(/Track/g, 'My Orders');
                 }
-                // Also update spans that contain the text
-                const spans = link.querySelectorAll('span');
-                spans.forEach(span => {
-                    if (span.textContent.includes('Track')) {
-                        span.textContent = span.textContent.replace('Track', 'My Orders');
-                    }
-                });
             });
         } else {
             authLinks.innerHTML = `
