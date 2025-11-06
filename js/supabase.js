@@ -82,14 +82,25 @@ export async function isAuthenticated() {
 // Check if user is seller/admin
 export async function isSeller(userId) {
     try {
+        console.log('Checking if user is seller. User ID:', userId);
+        
         const { data, error } = await supabase
             .from('users')
             .select('role')
             .eq('id', userId)
             .single();
         
-        if (error) throw error;
-        return data?.role === 'seller' || data?.role === 'admin';
+        console.log('Database query result:', { data, error });
+        
+        if (error) {
+            console.error('Error fetching user role:', error);
+            throw error;
+        }
+        
+        const isSellerUser = data?.role === 'seller' || data?.role === 'admin';
+        console.log('User role:', data?.role, 'Is seller?', isSellerUser);
+        
+        return isSellerUser;
     } catch (error) {
         console.error('Check seller error:', error);
         return false;
@@ -314,19 +325,28 @@ export async function protectPage(redirectTo = '/login.html') {
 
 // Protect seller page
 export async function protectSellerPage(redirectTo = 'login.html') {
+    console.log('🔒 Protecting seller page...');
+    
     const user = await getCurrentUser();
+    console.log('Current user:', user);
+    
     if (!user) {
+        console.log('❌ No user found, redirecting to login');
         window.location.href = redirectTo + '?redirect=seller.html';
         return false;
     }
     
+    console.log('✅ User authenticated, checking seller role...');
     const isSellerUser = await isSeller(user.id);
+    
     if (!isSellerUser) {
+        console.log('❌ User is not a seller, access denied');
         alert('Access denied. Seller privileges required.');
         window.location.href = 'index.html';
         return false;
     }
     
+    console.log('✅ User is a seller, access granted!');
     return true;
 }
 
