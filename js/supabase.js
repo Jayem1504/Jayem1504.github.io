@@ -388,6 +388,9 @@ export async function updateNavbar() {
     if (authLinks) {
         if (user) {
             authLinks.innerHTML = `
+                <a href="profile.html" class="text-gray-700 hover:text-blue-600 px-2 sm:px-3 py-2 font-medium text-sm sm:text-base">
+                    <i class="fas fa-user"></i><span class="hidden sm:inline ml-1"> Profile</span>
+                </a>
                 <button id="logout-btn" class="text-gray-700 hover:text-blue-600 px-2 sm:px-3 py-2 font-medium text-sm sm:text-base">
                     <i class="fas fa-sign-out-alt"></i><span class="hidden sm:inline ml-1"> Logout</span>
                 </button>

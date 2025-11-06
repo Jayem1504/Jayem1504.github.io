@@ -235,18 +235,40 @@ checkoutForm.addEventListener('submit', async function(e) {
 updateCartCount();
 renderCartItems();
 
-// Auto-fill email and update navbar for logged-in users
+// Auto-fill profile information for logged-in users
 (async () => {
     await updateNavbar();
     
     const user = await getCurrentUser();
     if (user) {
+        // Load saved profile data
+        const savedProfile = JSON.parse(localStorage.getItem(`profile_${user.email}`) || '{}');
+        
+        // Auto-fill email
         const emailInput = document.getElementById('customer-email');
         if (emailInput) {
             emailInput.value = user.email;
             // Make it read-only for logged-in users
             emailInput.readOnly = true;
             emailInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+        }
+
+        // Auto-fill name if available
+        const nameInput = document.getElementById('customer-name');
+        if (nameInput && savedProfile.name) {
+            nameInput.value = savedProfile.name;
+        }
+
+        // Auto-fill phone if available
+        const phoneInput = document.getElementById('customer-phone');
+        if (phoneInput && savedProfile.phone) {
+            phoneInput.value = savedProfile.phone;
+        }
+
+        // Auto-fill address if available
+        const addressInput = document.getElementById('customer-address');
+        if (addressInput && savedProfile.address) {
+            addressInput.value = savedProfile.address;
         }
     }
 })();
