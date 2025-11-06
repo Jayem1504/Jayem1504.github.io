@@ -149,7 +149,10 @@
         if (localStorage.getItem('isSellerLoggedIn') !== 'true') {
             alert('Please login with seller credentials to access this page.');
             window.location.href = 'login.html?redirect=seller.html';
+            throw new Error('Not authenticated'); // Stop execution
         }
+
+        console.log('✅ Seller authenticated, loading dashboard...');
 
         import { 
             getAllOrders, 
@@ -219,6 +222,10 @@
 
         // Render orders
         function renderOrders() {
+            console.log('🎨 Rendering orders...');
+            console.log('Filtered orders count:', filteredOrders.length);
+            console.log('Filtered orders data:', filteredOrders);
+            
             const loadingState = document.getElementById('loading-state');
             const emptyState = document.getElementById('empty-state');
             const ordersContainer = document.getElementById('orders-container');
@@ -226,10 +233,13 @@
             loadingState.classList.add('hidden');
             
             if (filteredOrders.length === 0) {
+                console.log('⚠️ No orders to display - showing empty state');
                 emptyState.classList.remove('hidden');
                 ordersContainer.classList.add('hidden');
                 return;
             }
+            
+            console.log('✅ Rendering', filteredOrders.length, 'orders');
             
             emptyState.classList.add('hidden');
             ordersContainer.classList.remove('hidden');
