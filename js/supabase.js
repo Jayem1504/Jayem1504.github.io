@@ -4,6 +4,10 @@
 const SUPABASE_URL = 'https://ccqyrxlsgskbhunmhzdk.supabase.co'; // e.g., https://xxxxx.supabase.co
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjcXlyeGxzZ3NrYmh1bm1oemRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI0MDc4MzYsImV4cCI6MjA3Nzk4MzgzNn0.soGwccL9-bqm0eLN9KyvxvQ2Faj5Mi-6W5UtGGuGd-s';
 
+// Hardcoded Seller Credentials
+const SELLER_EMAIL = 'tumblera.seller@gmail.com';
+const SELLER_PASSWORD = 'tumblera';
+
 // Import Supabase client
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
@@ -79,28 +83,24 @@ export async function isAuthenticated() {
     return user !== null;
 }
 
-// Check if user is seller/admin
-export async function isSeller(userId) {
+// Check if current user is the seller (hardcoded check)
+export async function isSeller(userId = null) {
     try {
-        console.log('Checking if user is seller. User ID:', userId);
+        const user = userId ? { id: userId } : await getCurrentUser();
+        if (!user) return false;
         
-        const { data, error } = await supabase
-            .from('users')
-            .select('role')
-            .eq('id', userId)
-            .single();
-        
-        console.log('Database query result:', { data, error });
-        
+        // Get user's email from Supabase auth
+        const { data: { user: authUser }, error } = await supabase.auth.getUser();
         if (error) {
-            console.error('Error fetching user role:', error);
-            throw error;
+            console.error('Error getting user:', error);
+            return false;
         }
         
-        const isSellerUser = data?.role === 'seller' || data?.role === 'admin';
-        console.log('User role:', data?.role, 'Is seller?', isSellerUser);
+        // Check if email matches seller email
+        const isSellerAccount = authUser?.email === SELLER_EMAIL;
+        console.log('Checking seller access for:', authUser?.email, '→', isSellerAccount);
         
-        return isSellerUser;
+        return isSellerAccount;
     } catch (error) {
         console.error('Check seller error:', error);
         return false;
@@ -336,17 +336,17 @@ export async function protectSellerPage(redirectTo = 'login.html') {
         return false;
     }
     
-    console.log('✅ User authenticated, checking seller role...');
+    console.log('✅ User authenticated, checking if seller account...');
     const isSellerUser = await isSeller(user.id);
     
     if (!isSellerUser) {
-        console.log('❌ User is not a seller, access denied');
-        alert('Access denied. Seller privileges required.');
+        console.log('❌ Not the seller account, access denied');
+        alert('Access denied. This page is only accessible by the seller account.');
         window.location.href = 'index.html';
         return false;
     }
     
-    console.log('✅ User is a seller, access granted!');
+    console.log('✅ Seller account verified, access granted!');
     return true;
 }
 
