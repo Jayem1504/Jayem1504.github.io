@@ -9,6 +9,7 @@ const totalElement = document.getElementById('total');
 const checkoutForm = document.getElementById('checkout-form');
 const orderSummary = document.getElementById('order-summary');
 const checkoutFormContainer = document.getElementById('checkout-form-container');
+const cartContainer = document.getElementById('cart-container');
 
 // Constants
 const SHIPPING_COST = 5.00;
@@ -37,12 +38,12 @@ function renderCartItems() {
     if (cart.length === 0) {
         cartItemsContainer.innerHTML = '';
         emptyCartMessage.classList.remove('hidden');
-        orderSummary.classList.add('hidden');
-        checkoutFormContainer.classList.add('hidden');
+        cartContainer.classList.add('hidden');
         return;
     }
     
     emptyCartMessage.classList.add('hidden');
+    cartContainer.classList.remove('hidden');
     orderSummary.classList.remove('hidden');
     checkoutFormContainer.classList.remove('hidden');
     
